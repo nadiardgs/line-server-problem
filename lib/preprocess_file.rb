@@ -5,7 +5,7 @@ class PreprocessFile
       File.open(output_file, "w") do |outfile|
         byte_offset = 0
         line_number = 0
-        infile.each_line do |line|
+        while (line = infile.gets)
           outfile.puts byte_offset
           byte_offset += line.bytesize
           line_number += 1

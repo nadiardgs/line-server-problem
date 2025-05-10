@@ -2,7 +2,7 @@ class LinesController < ApplicationController
   def show
     line_index_str = params[:line_index]
     unless line_index_str =~ /\A\d+\z/
-      render plain: "Invalid line index\n", status: 400
+      render plain: "Invalid line index\\n", status: 400
       return
     end
 
@@ -13,7 +13,12 @@ class LinesController < ApplicationController
     line_count = PreprocessFile.line_count(offsets_file_path)
 
     if line_count == 0
-      render plain: "The file is empty\n", status: 413 # HTTP 413 for empty file
+      render plain: "The file is empty\n", status: 413
+      return
+    end
+
+    if line_index < 0 || line_index >= line_count
+      render plain: "Requested line index is beyond the end of the file\n", status: 413
       return
     end
 
@@ -21,8 +26,6 @@ class LinesController < ApplicationController
 
     if line
       render plain: "#{line}\n", status: 200
-    elsif line_index >= line_count
-      render plain: "Requested line index is beyond the end of the file\n", status: 413 # HTTP 413
     else
       render plain: "Error retrieving line\n", status: 500
     end
