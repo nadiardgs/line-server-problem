@@ -4,8 +4,8 @@
 mkdir -p data
 
 # Path to the input file
-INPUT_FILE="data/input.txt"
-OUTPUT_FILE="data/line_offsets.dat"
+INPUT_FILE="input.txt"
+OUTPUT_FILE="line_offsets.dat"
 
 # Check if the index file already exists and if the input file is newer
 if [ -f "$OUTPUT_FILE" ] && [ "$INPUT_FILE" -nt "$OUTPUT_FILE" ]; then
