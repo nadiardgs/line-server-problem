@@ -8,6 +8,7 @@ This system works as follows:
   5) Run the command: bin/run.sh data/input.txt - It will start the Rails server, pointing to the input.txt file under the data folder. This can be modified as you wish, as long as each line ends with an /n (newline).
   6) Call the API. The syntax is http://localhost:3000/lines/{line_number}. For example: http://localhost:3000/lines/21
 
+It's possible to generate files of various sizes. For that, follow the instructions available on scripts/generate_file.sh.
 
 This code should perform moderately well with a 1GB file. Re-generating the offset file will take longer and the API calls will likely take a few seconds. For 10GB or 100GB files, the performance will decrease significatively, given the impressive size of those files.
 
