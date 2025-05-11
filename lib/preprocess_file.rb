@@ -1,8 +1,10 @@
-# lib/preprocess_file.rb
 class PreprocessFile
+
   def self.generate_index(input_file, output_file)
-    File.open(input_file, "r") do |infile|
-      File.open(output_file, "w") do |outfile|
+    input_path = Rails.root.join('data', input_file).to_s
+    output_path = Rails.root.join('data', output_file).to_s
+    File.open(input_path, "r") do |infile|
+      File.open(output_path, "w") do |outfile|
         byte_offset = 0
         line_number = 0
         while (line = infile.gets)
@@ -10,23 +12,36 @@ class PreprocessFile
           byte_offset += line.bytesize
           line_number += 1
         end
-        puts "Processed #{line_number} lines. Index saved to #{output_file}"
+        puts "Processed #{line_number} lines. Index saved to #{output_path}"
       end
     end
   rescue Errno::ENOENT
-    puts "Error: Input file '#{input_file}' not found."
+    puts "Error: Input file '#{input_path}' not found."
   end
 
   def self.get_line(file_path, index, offsets_path)
-    offsets = File.readlines(offsets_path).map(&:to_i)
+    full_file_path = Rails.root.join(file_path).to_s # Explicitly use Rails.root.join
+    full_offsets_path = Rails.root.join('data', offsets_path).to_s # Explicitly use Rails.root.join
+    Rails.logger.info "PreprocessFile.get_line - File path: #{full_file_path}, Offsets path: #{full_offsets_path}, Index: #{index}"
+    offsets = File.readlines(full_offsets_path).map(&:to_i)
     if index >= 0 && index < offsets.length
       offset = offsets[index]
-      File.open(file_path, "r") do |file|
-        file.seek(offset)
-        file.readline.chomp
+      begin
+        File.open(full_file_path, "r", encoding: Encoding::ASCII_8BIT) do |file|
+          file.seek(offset)
+          line = file.readline.chomp
+          Rails.logger.info "PreprocessFile.get_line - Read line (inspect): #{line.inspect}"
+          return line
+        end
+      rescue EOFError
+        Rails.logger.warn "EOFError encountered while reading #{full_file_path} at offset #{offset}"
+        return nil
+      rescue => e
+        Rails.logger.error "Error reading in PreprocessFile.get_line: #{e.message}"
+        return nil
       end
     else
-      nil # Indicate line index out of bounds
+      nil
     end
   rescue Errno::ENOENT
     puts "Error: File not found."
@@ -34,8 +49,18 @@ class PreprocessFile
   end
 
   def self.line_count(offsets_path)
-    File.readlines(offsets_path).count
-  rescue Errno::ENOENT
-    0
+    full_offsets_path = Rails.root.join('data', offsets_path).to_s # Explicitly use Rails.root.join
+    Rails.logger.info "PreprocessFile.line_count - Offsets path: #{full_offsets_path}"
+    begin
+      lines = File.readlines(full_offsets_path)
+      Rails.logger.info "PreprocessFile.line_count - Number of lines read: #{lines.count}"
+      Rails.logger.info "PreprocessFile.line_count - First few lines: #{lines.take(5).inspect}"
+      return lines.count
+    rescue Errno::ENOENT
+      0
+    rescue => e
+      Rails.logger.error "Error reading offsets file in line_count: #{e.message}"
+      return 0
+    end
   end
 end
