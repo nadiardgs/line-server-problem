@@ -1,17 +1,34 @@
+require "time_helper.rb"
 class PreprocessFile
+  include TimeHelper
   def self.generate_index(input_file, output_file)
-    input_path = Rails.root.join("data", input_file).to_s
+    input_path = Rails.root.join(input_file).to_s
     output_path = Rails.root.join("data", output_file).to_s
+
     File.open(input_path, "r") do |infile|
       File.open(output_path, "w") do |outfile|
         byte_offset = 0
         line_number = 0
+
+        start_timestamp = Time.now.getutc
+
+        generate_message = "Generating file #{output_file}... This might take a few seconds.\n"
+        Rails.logger.info = generate_message
+        puts generate_message
+
         while (line = infile.gets)
           outfile.puts byte_offset
           byte_offset += line.bytesize
           line_number += 1
         end
-        puts "Processed #{line_number} lines. Index saved to #{output_path}"
+
+        end_timestamp = Time.now.getutc
+        duration = get_difference_in_seconds(start_timestamp, end_timestamp)
+
+        processed_message = "File #{output_file} processed successfully #{line_number} lines
+          in #{duration} seconds."
+        Rails.logger.info processed_message
+        puts processed_message
       end
     end
   rescue Errno::ENOENT

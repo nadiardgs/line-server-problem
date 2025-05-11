@@ -27,8 +27,8 @@ class LinesController < ApplicationController
     begin
       line = PreprocessFile.get_line(text_file_path, line_index, offsets_file_path)
       end_timestamp = Time.now.getutc
-      duration = get_difference_in_milliseconds(start_timestamp, end_timestamp)
-      Rails.logger.info "Retrieved line (inspect): #{line.inspect} in #{duration} milliseconds\n"
+      duration = get_difference_in_seconds(start_timestamp, end_timestamp)
+      Rails.logger.info "Retrieved line (inspect): #{line.inspect} in #{duration} seconds\n"
       if line
         render plain: "#{line}\n", status: 200,
                headers: { "X-Request-Time" => duration.to_s }
