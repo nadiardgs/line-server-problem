@@ -1,14 +1,15 @@
 class LinesController < ApplicationController
   def show
+    start_timestamp = Time.now.getutc
     line_index_str = params[:line_index]
     unless line_index_str =~ /\A\d+\z/
-      render plain: "Invalid line index", status: :bad_request
+      render plain: "Invalid line index\n", status: 400
       return
     end
 
     line_index = line_index_str.to_i
-    text_file_path = ENV['TEXT_FILE_TO_SERVE'] || 'input.txt'
-    offsets_file_path = 'line_offsets.dat'
+    text_file_path = ENV["TEXT_FILE_TO_SERVE"] || "input.txt"
+    offsets_file_path = "line_offsets.dat"
 
     Rails.logger.info "Requested index: #{line_index}"
     Rails.logger.info "Text file path (controller): #{Rails.root.join(text_file_path)}"
@@ -29,9 +30,12 @@ class LinesController < ApplicationController
 
     begin
       line = PreprocessFile.get_line(text_file_path, line_index, offsets_file_path)
-      Rails.logger.info "Retrieved line (inspect): #{line.inspect}"
+      end_timestamp = Time.now.getutc
+      duration  = (end_timestamp - start_timestamp) / 1000
+      Rails.logger.info "Retrieved line (inspect): #{line.inspect} in #{duration} milliseconds\n"
       if line
-        render plain: "#{line}\n", status: 200
+        render plain: "#{line}\n", status: 200,
+               headers: { "X-Request-Time" => duration.round(2).to_s }
       else
         render plain: "Error retrieving line (nil returned)\n", status: 500
       end
